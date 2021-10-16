@@ -4,16 +4,17 @@ import (
 	"io"
 	"log"
 	"net"
+	"time"
 )
 
 // Start socks5 server
 func StartServer(config Config) {
-	log.Printf("socks5-server [tcp] started on %s", config.LocalAddr)
 	udpConn := handleUDP(config)
 	handleTCP(config, udpConn)
 }
 
 func handleTCP(config Config, udpConn *net.UDPConn) {
+	log.Printf("socks5-server [tcp] started on %s", config.LocalAddr)
 	l, err := net.Listen("tcp", config.LocalAddr)
 	if err != nil {
 		log.Panicf("[tcp] failed to listen tcp %v", err)
@@ -28,9 +29,10 @@ func handleTCP(config Config, udpConn *net.UDPConn) {
 }
 
 func handleUDP(config Config) *net.UDPConn {
-	udpReply := &UDPReply{config: config}
+	udpReply := &UDPReply{Config: config}
 	go udpReply.Start()
-	return udpReply.localUDPConn
+	time.Sleep(1 * time.Second)
+	return udpReply.LocalUDPConn
 }
 
 func tcpHandler(tcpConn net.Conn, udpConn *net.UDPConn, config Config) {

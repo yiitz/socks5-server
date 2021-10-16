@@ -10,40 +10,40 @@ import (
 )
 
 type UDPReply struct {
-	config       Config
-	localUDPConn *net.UDPConn
+	Config       Config
+	LocalUDPConn *net.UDPConn
 }
 
 type uProxy struct {
-	config        Config
-	localConn     *net.UDPConn
-	dstMap        sync.Map
-	remoteConnMap sync.Map
+	Config        Config
+	LocalConn     *net.UDPConn
+	DstMap        sync.Map
+	RemoteConnMap sync.Map
 }
 
 func (u *UDPReply) Start() {
-	udpAddr, _ := net.ResolveUDPAddr("udp", u.config.LocalAddr)
+	udpAddr, _ := net.ResolveUDPAddr("udp", u.Config.LocalAddr)
 	udpConn, err := net.ListenUDP("udp", udpAddr)
 	if err != nil {
 		log.Printf("[udp] failed to listen udp %v", err)
 		return
 	}
-	u.localUDPConn = udpConn
-	defer u.localUDPConn.Close()
-	log.Printf("socks5-server [udp] started on %v", u.config.LocalAddr)
+	u.LocalUDPConn = udpConn
+	defer u.LocalUDPConn.Close()
+	log.Printf("socks5-server [udp] started on %v", u.Config.LocalAddr)
 	u.proxy()
 }
 
 func (u *UDPReply) proxy() {
-	proxy := &uProxy{localConn: u.localUDPConn, config: u.config}
+	proxy := &uProxy{LocalConn: u.LocalUDPConn, Config: u.Config}
 	proxy.toRemote()
 }
 
 func (proxy *uProxy) toRemote() {
 	buf := make([]byte, BufferSize)
 	for {
-		proxy.localConn.SetReadDeadline(time.Now().Add(time.Duration(Timeout) * time.Second))
-		n, cliAddr, err := proxy.localConn.ReadFromUDP(buf)
+		proxy.LocalConn.SetReadDeadline(time.Now().Add(time.Duration(Timeout) * time.Second))
+		n, cliAddr, err := proxy.LocalConn.ReadFromUDP(buf)
 		if err != nil || err == io.EOF || n == 0 {
 			continue
 		}
@@ -53,19 +53,21 @@ func (proxy *uProxy) toRemote() {
 			continue
 		}
 		key := cliAddr.String()
-		var remoteConn *net.UDPConn
-		if value, ok := proxy.remoteConnMap.Load(key); ok {
-			remoteConn = value.(*net.UDPConn)
+		value, ok := proxy.RemoteConnMap.Load(key)
+		if ok && value != nil {
+			remoteConn := value.(*net.UDPConn)
+			remoteConn.Write(data)
 		} else {
 			remoteConn, err := net.DialUDP("udp", nil, dstAddr)
-			if err != nil {
+			if remoteConn == nil || err != nil {
+				log.Printf("failed to dial udp:%v", dstAddr)
 				continue
 			}
-			proxy.remoteConnMap.Store(key, remoteConn)
-			proxy.dstMap.Store(key, header)
+			proxy.RemoteConnMap.Store(key, remoteConn)
+			proxy.DstMap.Store(key, header)
 			go proxy.toLocal(remoteConn, cliAddr)
+			remoteConn.Write(data)
 		}
-		remoteConn.Write(b)
 	}
 }
 
@@ -79,15 +81,15 @@ func (proxy *uProxy) toLocal(remoteConn *net.UDPConn, cliAddr *net.UDPAddr) {
 		if n == 0 || err != nil {
 			break
 		}
-		if header, ok := proxy.dstMap.Load(key); ok {
+		if header, ok := proxy.DstMap.Load(key); ok {
 			var data bytes.Buffer
 			data.Write(header.([]byte))
 			data.Write(buf[:n])
-			proxy.localConn.WriteToUDP(data.Bytes(), cliAddr)
+			proxy.LocalConn.WriteToUDP(data.Bytes(), cliAddr)
 		}
 	}
-	proxy.dstMap.Delete(key)
-	proxy.remoteConnMap.Delete(key)
+	proxy.DstMap.Delete(key)
+	proxy.RemoteConnMap.Delete(key)
 }
 
 func (proxy *uProxy) getAddr(b []byte) (dstAddr *net.UDPAddr, header []byte, data []byte) {
