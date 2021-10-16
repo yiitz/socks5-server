@@ -22,17 +22,15 @@ Usage of /main:
 
 ## Run server
 ```
-docker run  -d --restart=always --net=host \
--p 127.0.0.1:1080:1080 -p 127.0.0.1:1080:1080/udp --name socks5-server netbyte/socks5-server -l 127.0.0.1:1080
+docker run  -d --restart=always \
+-p 1080:1080 -p 1080:1080/udp --name socks5-server netbyte/socks5-server -l :1080
 ```
 
 ## Run server with auth
 ```
-docker run  -d --restart=always --net=host \
--p 127.0.0.1:1080:1080 -p 127.0.0.1:1080:1080/udp --name socks5-server netbyte/socks5-server -l 127.0.0.1:1080 -u root -p 123456
+docker run  -d --restart=always \
+-p 1080:1080 -p 1080:1080/udp --name socks5-server netbyte/socks5-server -l :1080 -u root -p 123456
 ```
 
 # License
 [The MIT License (MIT)](https://raw.githubusercontent.com/net-byte/opensocks/main/LICENSE)
-
-
