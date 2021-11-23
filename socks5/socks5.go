@@ -4,7 +4,6 @@ import (
 	"io"
 	"log"
 	"net"
-	"time"
 )
 
 // Start socks5 server
@@ -29,10 +28,8 @@ func handleTCP(config Config, udpConn *net.UDPConn) {
 }
 
 func handleUDP(config Config) *net.UDPConn {
-	udpReply := &UDPReply{Config: config}
-	go udpReply.Start()
-	time.Sleep(1 * time.Second)
-	return udpReply.LocalUDPConn
+	udpRelay := &UDPRelay{Config: config}
+	return udpRelay.Start()
 }
 
 func tcpHandler(tcpConn net.Conn, udpConn *net.UDPConn, config Config) {
