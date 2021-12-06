@@ -1,6 +1,6 @@
 # socks5-server
 
-A socks5 server(tcp/udp) written in golang.
+A socks5 over tls server(tcp/udp) written in golang.
 
 [![Travis](https://travis-ci.com/net-byte/socks5-server.svg?branch=main)](https://github.com/net-byte/socks5-server)
 [![Go Report Card](https://goreportcard.com/badge/github.com/net-byte/socks5-server)](https://goreportcard.com/report/github.com/net-byte/socks5-server)
@@ -16,6 +16,12 @@ Usage of /main:
         password
   -u string
         username
+  -sk string
+        server key file path (default "../certs/server.key")
+  -sp string
+        server pem file path (default "../certs/server.pem")
+  -tls
+        enable tls
 ```
 
 # Docker
@@ -30,6 +36,12 @@ docker run  -d --restart=always \
 ```
 docker run  -d --restart=always \
 -p 1080:1080 -p 1080:1080/udp --name socks5-server netbyte/socks5-server -l :1080 -u root -p 123456
+```
+
+## Run server over tls with auth
+```
+docker run  -d --restart=always \
+-p 1080:1080 -p 1080:1080/udp --name socks5-server netbyte/socks5-server -l :1080 -u root -p 123456 -tls -sk /app/certs/server.key -sp /app/certs/server.pem
 ```
 
 # License

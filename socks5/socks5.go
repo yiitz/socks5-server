@@ -1,6 +1,7 @@
 package socks5
 
 import (
+	"crypto/tls"
 	"io"
 	"log"
 	"net"
@@ -13,10 +14,25 @@ func StartServer(config Config) {
 }
 
 func handleTCP(config Config, udpConn *net.UDPConn) {
-	log.Printf("socks5-server [tcp] started on %s", config.LocalAddr)
-	l, err := net.Listen("tcp", config.LocalAddr)
-	if err != nil {
-		log.Panicf("[tcp] failed to listen tcp %v", err)
+	var l net.Listener
+	var err error
+	if config.TLS {
+		cer, err := tls.LoadX509KeyPair(config.ServerPem, config.ServerKey)
+		if err != nil {
+			log.Panic(err)
+		}
+		c := &tls.Config{Certificates: []tls.Certificate{cer}}
+		l, err = tls.Listen("tcp", config.LocalAddr, c)
+		if err != nil {
+			log.Panicf("[tls] failed to listen tcp %v", err)
+		}
+		log.Printf("socks5-server [tls] started on %s", config.LocalAddr)
+	} else {
+		l, err = net.Listen("tcp", config.LocalAddr)
+		if err != nil {
+			log.Panicf("[tcp] failed to listen tcp %v", err)
+		}
+		log.Printf("socks5-server [tcp] started on %s", config.LocalAddr)
 	}
 	for {
 		tcpConn, err := l.Accept()
