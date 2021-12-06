@@ -20,8 +20,7 @@ Usage of /main:
         server key file path (default "../certs/server.key")
   -sp string
         server pem file path (default "../certs/server.pem")
-  -tls
-        enable tls
+  -tls enable tls
 ```
 
 # Docker
