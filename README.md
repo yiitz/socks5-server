@@ -45,4 +45,4 @@ docker run  -d --restart=always \
 ```
 
 # License
-[The MIT License (MIT)](https://raw.githubusercontent.com/net-byte/opensocks/main/LICENSE)
+[The MIT License (MIT)](https://raw.githubusercontent.com/net-byte/socks5-server/main/LICENSE)
