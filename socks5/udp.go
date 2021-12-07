@@ -147,7 +147,7 @@ func (relay *UDPRelay) getAddr(b []byte) (dstAddr *net.UDPAddr, header []byte, d
 	case Ipv6Address:
 		{
 			dstAddr = &net.UDPAddr{
-				IP:   net.IP(b[4:19]),
+				IP:   net.IP(b[4:20]),
 				Port: int(b[20])<<8 | int(b[21]),
 			}
 			header = b[0:22]

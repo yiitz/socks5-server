@@ -45,7 +45,7 @@ func getAddr(b []byte) (host string, port string) {
 	case FqdnAddress:
 		host = string(b[5 : len-2])
 	case Ipv6Address:
-		host = net.IP(b[4:19]).String()
+		host = net.IP(b[4:20]).String()
 	default:
 		return "", ""
 	}
